@@ -1,0 +1,93 @@
+name: Create S3 Bucket (OpenTofu, manual)
+
+on:
+  workflow_dispatch:
+    inputs:
+      bucket_name:
+        description: "S3 bucket name (global, must be unique)"
+        required: true
+        type: string
+      aws_region:
+        description: "AWS region"
+        required: true
+        type: string
+        default: "us-east-1"
+      enable_versioning:
+        description: "Enable versioning"
+        required: true
+        type: choice
+        options: [yes, no]
+        default: yes
+      encryption:
+        description: "Default encryption"
+        required: true
+        type: choice
+        options: [AES256, aws:kms, none]
+        default: AES256
+      kms_key_arn:
+        description: "(Optional) KMS Key ARN when encryption=aws:kms"
+        required: false
+        type: string
+      extra_tags_json:
+        description: "(Optional) JSON map of extra tags, e.g. {\"Env\":\"dev\",\"Owner\":\"DevOps\"}"
+        required: false
+        type: string
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  plan-apply:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_OIDC_ROLE }}
+          aws-region: ${{ inputs.aws_region }}
+
+      - name: Install OpenTofu
+        uses: opentofu/setup-opentofu@v1
+
+      # Optional: if you want S3 remote state, add a backend-config file and pass it here.
+      - name: Tofu init
+        run: |
+          tofu init
+
+      - name: Tofu plan
+        id: plan
+        env:
+          TF_VAR_bucket_name: ${{ inputs.bucket_name }}
+          TF_VAR_aws_region: ${{ inputs.aws_region }}
+          TF_VAR_enable_versioning: ${{ inputs.enable_versioning == 'yes' }}
+          TF_VAR_encryption: ${{ inputs.encryption }}
+          TF_VAR_kms_key_arn: ${{ inputs.kms_key_arn }}
+          EXTRA_TAGS_JSON: ${{ inputs.extra_tags_json }}
+        run: |
+          set -euo pipefail
+          # Convert tags JSON (if provided) into TF_VAR_extra_tags
+          if [[ -n "${EXTRA_TAGS_JSON:-}" ]]; then
+            echo "Using extra tags: $EXTRA_TAGS_JSON"
+            export TF_VAR_extra_tags="$EXTRA_TAGS_JSON"
+          fi
+          tofu plan -no-color -out=tfplan
+
+      - name: Tofu apply (auto-approve)
+        if: ${{ success() }}
+        run: |
+          tofu apply -auto-approve tfplan
+
+      - name: Show outputs
+        run: |
+          echo "Bucket name:"
+          tofu output bucket_name
+          echo "Bucket ARN:"
+          tofu output bucket_arn
+          echo "Region:"
+          tofu output bucket_region
+

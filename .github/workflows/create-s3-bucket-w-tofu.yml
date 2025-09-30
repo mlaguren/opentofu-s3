@@ -22,18 +22,12 @@ on:
         description: "Default encryption"
         required: true
         type: choice
-        options: [AES256, aws:kms, none]
-        default: AES256
+        options: ["AES256", "aws:kms", "none"]  # <-- quote these, especially aws:kms
+        default: "AES256"  
       kms_key_arn:
         description: "(Optional) KMS key ARN when encryption=aws:kms"
         required: false
         type: string
-      enable_versioning:
-        description: "Enable bucket versioning?"
-        required: true
-        type: choice
-        options: [yes, no]
-        default: yes
 permissions:
   id-token: write
   contents: read

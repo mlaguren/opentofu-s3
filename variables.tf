@@ -7,11 +7,58 @@ variable "aws_region" {
 variable "bucket_name" {
   description = "Globally unique S3 bucket name"
   type        = string
+  validation {
+    condition = can(regex("^[a-z0-9]([a-z0-9.-]{1,61})[a-z0-9]$", var.bucket_name))
+    error_message = "Bucket names must be 3-63 chars, lowercase letters, numbers, dots or hyphens, no leading/trailing dot or hyphen."
+  }
 }
 
-# variables.tf
 variable "aws_profile" {
-  description = "Named AWS profile from ~/.aws/credentials"
+  description = "Named AWS profile from ~/.aws/credentials (leave empty in CI)"
   type        = string
   default     = "default"
 }
+
+variable "enable_versioning" {
+  description = "Enable S3 versioning"
+  type        = bool
+  default     = true
+}
+
+variable "encryption" {
+  description = "Default encryption: AES256 | aws:kms | none"
+  type        = string
+  default     = "AES256"
+  validation {
+    condition     = contains(["AES256", "aws:kms", "none"], var.encryption)
+    error_message = "Use AES256, aws:kms, or none."
+  }
+}
+
+variable "kms_key_arn" {
+  description = "KMS key ARN (required if encryption=aws:kms)"
+  type        = string
+  default     = ""
+}
+
+variable "extra_tags" {
+  description = "Additional tags to merge with defaults"
+  type        = map(string)
+  default     = {}
+}
+
+# Guard: if encryption is KMS, kms_key_arn must be provided
+locals {
+  _kms_guard = var.encryption != "aws:kms" || (var.encryption == "aws:kms" && trim(var.kms_key_arn) != "")
+}
+
+# Will fail planning if kms_key_arn missing while aws:kms is selected
+resource "null_resource" "kms_guard" {
+  lifecycle {
+    precondition {
+      condition     = local._kms_guard
+      error_message = "encryption=aws:kms requires a non-empty kms_key_arn."
+    }
+  }
+}
+

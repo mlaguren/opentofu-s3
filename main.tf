@@ -12,9 +12,10 @@ terraform {
 
 provider "aws" {
   region  = var.aws_region
-  # In CI we’ll set AWS creds via OIDC env vars; locally you can still use a profile.
-  profile = var.aws_profile != "" ? var.aws_profile : null
+  # Only use a profile when a non-empty value is provided
+  profile = trim(var.aws_profile) != "" ? var.aws_profile : null
 }
+
 
 # --- Core bucket ---
 resource "aws_s3_bucket" "demo" {

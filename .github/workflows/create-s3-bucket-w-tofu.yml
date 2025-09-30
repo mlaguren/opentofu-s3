@@ -1,6 +1,7 @@
 name: Create S3 Bucket (OpenTofu, manual)
 
 on:
+  pull_request:
   workflow_dispatch:
     inputs:
       bucket_name:

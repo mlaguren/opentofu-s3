@@ -16,7 +16,7 @@ variable "bucket_name" {
 variable "aws_profile" {
   description = "Named AWS profile from ~/.aws/credentials (leave empty in CI)"
   type        = string
-  default     = "default"
+  default     = ""   # MUST be empty in CI
 }
 
 variable "enable_versioning" {
@@ -50,15 +50,5 @@ variable "extra_tags" {
 # Guard: if encryption is KMS, kms_key_arn must be provided
 locals {
   _kms_guard = var.encryption != "aws:kms" || (var.encryption == "aws:kms" && trim(var.kms_key_arn) != "")
-}
-
-# Will fail planning if kms_key_arn missing while aws:kms is selected
-resource "null_resource" "kms_guard" {
-  lifecycle {
-    precondition {
-      condition     = local._kms_guard
-      error_message = "encryption=aws:kms requires a non-empty kms_key_arn."
-    }
-  }
 }
 

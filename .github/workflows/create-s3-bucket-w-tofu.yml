@@ -32,7 +32,6 @@ on:
         description: "(Optional) JSON map of extra tags, e.g. {\"Env\":\"dev\",\"Owner\":\"DevOps\"}"
         required: false
         type: string
-    pull_request:
 permissions:
   id-token: write
   contents: read

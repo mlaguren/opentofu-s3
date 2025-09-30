@@ -12,7 +12,7 @@ terraform {
 
 provider "aws" {
   region  = var.aws_region
-  profile = trim(var.aws_profile) != "" ? var.aws_profile : null
+  profile = var.aws_profile != "" ? var.aws_profile : null
 }
 
 # --- Core bucket ---

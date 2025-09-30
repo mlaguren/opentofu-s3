@@ -1,7 +1,6 @@
 name: Create S3 Bucket (OpenTofu, manual)
 
 on:
-  pull_request:
   workflow_dispatch:
     inputs:
       bucket_name:
@@ -33,7 +32,7 @@ on:
         description: "(Optional) JSON map of extra tags, e.g. {\"Env\":\"dev\",\"Owner\":\"DevOps\"}"
         required: false
         type: string
-
+    pull_request:
 permissions:
   id-token: write
   contents: read

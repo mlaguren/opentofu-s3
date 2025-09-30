@@ -1,10 +1,10 @@
-name: Create S3 Bucket (OpenTofu)
+name: Create S3 Bucket (OpenTofu, manual)
 
 on:
   workflow_dispatch:
     inputs:
       bucket_name:
-        description: "Globally-unique S3 bucket name"
+        description: "S3 bucket name (global, must be unique)"
         required: true
         type: string
       aws_region:
@@ -12,6 +12,12 @@ on:
         required: true
         type: string
         default: "us-east-1"
+      enable_versioning:
+        description: "Enable versioning"
+        required: true
+        type: choice
+        options: [yes, no]
+        default: yes
       encryption:
         description: "Default encryption"
         required: true
@@ -28,7 +34,6 @@ on:
         type: choice
         options: [yes, no]
         default: yes
-
 permissions:
   id-token: write
   contents: read
@@ -46,7 +51,6 @@ jobs:
       TF_VAR_enable_versioning: ${{ inputs.enable_versioning == 'yes' }}
       # Make tofu non-interactive
       TF_IN_AUTOMATION: "true"
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -56,20 +60,16 @@ jobs:
         with:
           role-to-assume: ${{ secrets.AWS_OIDC_ROLE }}
           aws-region: ${{ inputs.aws_region }}
-
       - name: Show caller identity (sanity)
         run: aws sts get-caller-identity
-
       - name: Ensure no profile leakage
         run: |
           set -euo pipefail
           unset AWS_PROFILE || true
           echo "AWS_PROFILE='${AWS_PROFILE-}' (should be empty)"
           echo "TF_VAR_aws_profile='${TF_VAR_aws_profile-}' (should be empty)"
-
       - name: Install OpenTofu
         uses: opentofu/setup-opentofu@v1
-
       - name: Init
         run: tofu init -input=false
 

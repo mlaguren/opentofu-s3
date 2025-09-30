@@ -52,4 +52,3 @@ locals {
   _kms_guard = var.encryption != "aws:kms" || (var.encryption == "aws:kms" && trim(var.kms_key_arn) != "")
 }
 
-

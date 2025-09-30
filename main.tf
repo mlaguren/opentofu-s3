@@ -15,8 +15,6 @@ provider "aws" {
   profile = trim(var.aws_profile) != "" ? var.aws_profile : null
 }
 
-
-
 # --- Core bucket ---
 resource "aws_s3_bucket" "demo" {
   bucket = var.bucket_name

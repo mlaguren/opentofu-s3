@@ -28,6 +28,12 @@ on:
         description: "(Optional) KMS key ARN when encryption=aws:kms"
         required: false
         type: string
+      enable_versioning:
+        description: "Enable bucket versioning?"
+        required: true
+        type: choice
+        options: [yes, no]
+        default: yes
 permissions:
   id-token: write
   contents: read

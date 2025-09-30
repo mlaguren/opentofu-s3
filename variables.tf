@@ -16,7 +16,7 @@ variable "bucket_name" {
 variable "aws_profile" {
   description = "Named AWS profile from ~/.aws/credentials (leave empty in CI)"
   type        = string
-  default     = ""   # was "default"
+  default     = ""   # MUST be empty in CI
 }
 
 variable "enable_versioning" {

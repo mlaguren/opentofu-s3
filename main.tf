@@ -12,9 +12,9 @@ terraform {
 
 provider "aws" {
   region  = var.aws_region
-  # Only use a profile when a non-empty value is provided
   profile = trim(var.aws_profile) != "" ? var.aws_profile : null
 }
+
 
 
 # --- Core bucket ---
